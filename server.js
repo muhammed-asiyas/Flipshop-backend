@@ -18,7 +18,6 @@ connectDB(process.env.MONGO_URI || 'mongodb+srv://asiyas:Asiyas100@asiyas.9m2p8h
 app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
-const cors = require('cors');
 app.use(cors({
   origin: 'https://flipshop-fullstack.onrender.com',
   methods: ['GET','POST','PUT','DELETE','OPTIONS']
