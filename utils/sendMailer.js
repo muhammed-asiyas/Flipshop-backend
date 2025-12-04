@@ -1,26 +1,23 @@
-const { Resend } = require('resend');
-
+const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-
 async function sendOrderEmail(to, order) {
-try {
-const itemsHtml = order.items
-.map(
-(item) => `
+  try {
+    const itemsHtml = order.items
+      .map(
+        (item) => `
 <tr>
 <td>${item.name}</td>
-<td>${item.size || '-'}</td>
+<td>${item.size || "-"}</td>
 <td>${item.qty}</td>
 <td>₹${item.price}</td>
 </tr>
 `
-)
-.join('');
+      )
+      .join("");
 
-
-const html = `
+    const html = `
 <h2>Thank you for your order!</h2>
 <p>Your order <strong>${order._id}</strong> has been placed successfully.</p>
 
@@ -47,21 +44,18 @@ ${itemsHtml}
 <p>We appreciate your purchase!</p>
 `;
 
+    const fromEmail = process.env.FROM_EMAIL || "onboarding@resend.dev";
 
-const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
-
-
-return await resend.emails.send({
-from: fromEmail,
-to,
-subject: `Order Confirmation - ${order._id}`,
-html,
-});
-} catch (err) {
-// rethrow so callers can log
-throw err;
+    return await resend.emails.send({
+      from: fromEmail,
+      to: 'asiyasmuhammed18@gmail.com',
+      subject: `Order Confirmation - ${order._id}`,
+      html,
+    });
+  } catch (err) {
+    // rethrow so callers can log
+    throw err;
+  }
 }
-}
-
 
 module.exports = sendOrderEmail;
