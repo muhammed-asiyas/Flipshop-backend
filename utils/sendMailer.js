@@ -1,5 +1,5 @@
-// utils/sendOrderEmail.js
-import { Resend } from "resend";
+// utils/sendMailer.js
+const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -40,21 +40,12 @@ async function sendOrderEmail(to, order) {
     <p>We appreciate your purchase!</p>
   `;
 
-  try {
-    const response = await resend.emails.send({
-      from: "FlipShop <onboarding@resend.dev>", // or your verified domain email
-      to,
-      subject: `Order Confirmation - ${order._id}`,
-      html,
-    });
-
-    console.log("Order email sent:", response);
-    return response;
-    
-  } catch (error) {
-    console.error("Email sending failed:", error);
-    throw error;
-  }
+  return resend.emails.send({
+    from: "FlipShop <onboarding@resend.dev>",
+    to,
+    subject: `Order Confirmation - ${order._id}`,
+    html,
+  });
 }
 
-export default sendOrderEmail;
+module.exports = sendOrderEmail;
