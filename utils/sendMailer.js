@@ -1,14 +1,9 @@
-const nodemailer = require("nodemailer");
+// utils/sendOrderEmail.js
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendOrderEmail(to, order) {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
   const itemsHtml = order.items
     .map(
       (item) => `
@@ -22,7 +17,7 @@ async function sendOrderEmail(to, order) {
     )
     .join("");
 
-  const message = `
+  const html = `
     <h2>Thank you for your order!</h2>
     <p>Your order <strong>${order._id}</strong> has been placed successfully.</p>
 
@@ -45,14 +40,21 @@ async function sendOrderEmail(to, order) {
     <p>We appreciate your purchase!</p>
   `;
 
-  await transporter.sendMail({
-    from: `"FlipShop" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: `Order Confirmation - ${order._id}`,
-    html: message,
-  });
+  try {
+    const response = await resend.emails.send({
+      from: "FlipShop <onboarding@resend.dev>", // or your verified domain email
+      to,
+      subject: `Order Confirmation - ${order._id}`,
+      html,
+    });
 
-  console.log("Order email sent successfully!");
+    console.log("Order email sent:", response);
+    return response;
+    
+  } catch (error) {
+    console.error("Email sending failed:", error);
+    throw error;
+  }
 }
 
-module.exports = sendOrderEmail;
+export default sendOrderEmail;

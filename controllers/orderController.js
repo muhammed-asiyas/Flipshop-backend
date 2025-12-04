@@ -1,7 +1,9 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 
-const sendOrderEmail = require("../utils/sendMailer");
+// NEW: Resend mailer
+const sendOrderEmail = require("../utils/sendMailer");  // Resend version
+
 
 exports.createOrder = async (req, res) => {
   try {
@@ -37,7 +39,7 @@ exports.createOrder = async (req, res) => {
       })
     );
 
-    // Shipping price (flat example)
+    // Shipping price
     const shippingPrice = 60;
 
     const totalPrice = itemsPrice + shippingPrice;
@@ -57,7 +59,7 @@ exports.createOrder = async (req, res) => {
 
     await order.populate("items.product");
 
-    // ====== FIX 4: Prepare email data ======
+    // ====== FIX 4: PREPARE ORDER FOR EMAIL ======
     const emailOrder = {
       ...order.toObject(),
       items: formattedItems.map(i => ({
@@ -67,10 +69,15 @@ exports.createOrder = async (req, res) => {
       }))
     };
 
-    // ====== FIX 5: Send email ======
-    await sendOrderEmail(email, emailOrder);
+    // ====== FIX 5: SEND EMAIL (RESEND) ======
+    try {
+      await sendOrderEmail(email, emailOrder);
+    } catch (emailErr) {
+      console.error("Email sending failed:", emailErr);
+      // Do NOT stop order creation if email fails
+    }
 
-    // ====== FIX 6: SEND FULL ORDER BACK TO FRONTEND ======
+    // ====== FIX 6: RESPOND TO FRONTEND ======
     res.status(201).json(order);
 
   } catch (err) {
@@ -80,13 +87,21 @@ exports.createOrder = async (req, res) => {
 };
 
 
+
 exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('user', 'name email');
     if (!order) return res.status(404).json({ message: 'Order not found' });
-    if (order.user && req.user && order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+
+    if (
+      order.user && 
+      req.user && 
+      order.user._id.toString() !== req.user._id.toString() && 
+      req.user.role !== 'admin'
+    ) {
       return res.status(403).json({ message: 'Forbidden' });
     }
+
     res.json(order);
   } catch (err) {
     console.error(err);
