@@ -16,7 +16,8 @@ const OrderSchema = new mongoose.Schema({
     email: String,
     city: String,
     postalCode: String,
-    country: String
+    country: String,
+    phone: String
   },
   paymentMethod: { type: String, default: 'mock' },
   itemsPrice: Number,
