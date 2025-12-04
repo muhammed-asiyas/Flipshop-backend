@@ -1,45 +1,53 @@
-const sgMail = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS, // App password
+  },
+});
 
-exports.sendOrderEmail = async (to, order) => {
+async function sendOrderEmail(to, order) {
   const itemsHtml = order.items
     .map(
       (item) => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.size || "-"}</td>
-          <td>${item.qty}</td>
-          <td>₹${item.price}</td>
-        </tr>
-      `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.size || "-"}</td>
+        <td>${item.qty}</td>
+        <td>₹${item.price}</td>
+      </tr>
+    `
     )
     .join("");
 
   const html = `
-    <h2>Your Order is Confirmed!</h2>
-    <p>Thank you for shopping with us.</p>
-
-    <h3>Order Details</h3>
+    <h2>Your Order is Confirmed</h2>
+    <p>Thank you for shopping with us!</p>
     <table border="1" cellpadding="6" cellspacing="0">
       <tr>
-        <th>Product</th>
-        <th>Size</th>
-        <th>Qty</th>
-        <th>Price</th>
+        <th>Item</th><th>Size</th><th>Qty</th><th>Price</th>
       </tr>
       ${itemsHtml}
     </table>
-
-    <p><strong>Total: ₹${order.totalPrice}</strong></p>
   `;
 
-  const msg = {
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
     to,
-    from: process.env.FROM_EMAIL, // must be VERIFIED
-    subject: "Your Order Confirmation",
+    subject: "Order Confirmation",
     html,
   };
 
-  return sgMail.send(msg);
-};
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Gmail Email sent:", info.response);
+    return info;
+  } catch (err) {
+    console.error("Email sending failed:", err);
+    throw err;
+  }
+}
+
+module.exports = sendOrderEmail;
