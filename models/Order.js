@@ -8,6 +8,7 @@ const OrderSchema = new mongoose.Schema({
       name: String,
       qty: Number,
       price: Number,
+      size: String,
     }
   ],
   shippingAddress: {
