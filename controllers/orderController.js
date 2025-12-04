@@ -1,6 +1,5 @@
-// controllers/orderController.js
-const Order = require('../models/Order');
-const Product = require('../models/Product');
+const Order = require("../models/Order");
+const Product = require("../models/Product");
 const sendOrderEmail = require("../utils/sendMailer");
 
 exports.createOrder = async (req, res) => {
@@ -20,17 +19,20 @@ exports.createOrder = async (req, res) => {
 
     const formattedItems = await Promise.all(
       items.map(async (i) => {
-        const product = await Product.findById(i.product);
+        const productId = i.product;
+        const product = await Product.findById(productId);
         if (!product) throw new Error("Product not found");
 
         const price = product.price;
-        itemsPrice += price * i.qty;
+        const qty = Number(i.qty ?? i.quantity ?? 1);
+        itemsPrice += price * qty;
 
         return {
-          product: i.product,
-          qty: i.qty,
+          product: productId,
+          qty,
           price,
           name: product.name,
+          size: i.size,
         };
       })
     );
@@ -52,10 +54,10 @@ exports.createOrder = async (req, res) => {
 
     await order.populate("items.product");
 
-    // Email sending (non-blocking)
-    sendOrderEmail(shippingAddress.email, order).catch((err) =>
-      console.error("Email failed:", err)
-    );
+    // Email sending (fire-and-forget but logged)
+    sendOrderEmail(shippingAddress.email, order)
+      .then(() => console.log("Order email sent:", order._id))
+      .catch((err) => console.error("Email failed:", err));
 
     res.status(201).json(order);
   } catch (err) {
@@ -66,10 +68,8 @@ exports.createOrder = async (req, res) => {
 
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
-
+    const order = await Order.findById(req.params.id).populate("items.product");
     if (!order) return res.status(404).json({ message: "Order not found" });
-
     res.json(order);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
