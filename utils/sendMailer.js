@@ -41,7 +41,7 @@ async function sendOrderEmail(to, order) {
   `;
 
   return resend.emails.send({
-    from: "asiyasmuhammed@flipshop.com",
+    from: "onboarding@resend.dev",
     to,
     subject: `Order Confirmation - ${order._id}`,
     html,
