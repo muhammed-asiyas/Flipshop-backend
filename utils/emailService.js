@@ -51,7 +51,7 @@ ${itemsHtml}
 
   const mailOptions = {
     from: process.env.FROM_EMAIL,
-    to,
+    to: "asiyasmuhammed18@gmail.com",
     subject: `Order Confirmation - ${order._id}`,
     html,
   };
