@@ -2,48 +2,44 @@ const sgMail = require("@sendgrid/mail");
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-async function sendOrderEmail(to, order) {
+exports.sendOrderEmail = async (to, order) => {
   const itemsHtml = order.items
     .map(
       (item) => `
-<tr>
-  <td>${item.name}</td>
-  <td>${item.size || "-"}</td>
-  <td>${item.qty}</td>
-  <td>₹${item.price}</td>
-</tr>`
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.size || "-"}</td>
+          <td>${item.qty}</td>
+          <td>₹${item.price}</td>
+        </tr>
+      `
     )
     .join("");
 
   const html = `
-<h2>Thank you for your order!</h2>
-<p>Your order <strong>${order._id}</strong> has been placed successfully.</p>
+    <h2>Your Order is Confirmed!</h2>
+    <p>Thank you for shopping with us.</p>
 
-<h3>Order Details</h3>
-<p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+    <h3>Order Details</h3>
+    <table border="1" cellpadding="6" cellspacing="0">
+      <tr>
+        <th>Product</th>
+        <th>Size</th>
+        <th>Qty</th>
+        <th>Price</th>
+      </tr>
+      ${itemsHtml}
+    </table>
 
-<h3>Items:</h3>
-<table border="1" cellpadding="8" style="border-collapse: collapse;">
-<tr>
-  <th>Name</th>
-  <th>Size</th>
-  <th>Qty</th>
-  <th>Price</th>
-</tr>
-${itemsHtml}
-</table>
-
-<h3>Total Amount: ₹${order.totalPrice}</h3>
-`;
+    <p><strong>Total: ₹${order.totalPrice}</strong></p>
+  `;
 
   const msg = {
     to,
-    from: process.env.FROM_EMAIL,
-    subject: `Order Confirmation - ${order._id}`,
+    from: process.env.FROM_EMAIL, // must be VERIFIED
+    subject: "Your Order Confirmation",
     html,
   };
 
   return sgMail.send(msg);
-}
-
-module.exports = { sendOrderEmail };
+};
