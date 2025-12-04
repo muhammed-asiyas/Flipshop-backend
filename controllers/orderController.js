@@ -6,6 +6,7 @@ exports.createOrder = async (req, res) => {
   try {
     const { items, shippingAddress, paymentMethod } = req.body;
 
+    // Validate email
     if (!shippingAddress?.email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -39,7 +40,7 @@ exports.createOrder = async (req, res) => {
     const shippingPrice = 60;
     const totalPrice = itemsPrice + shippingPrice;
 
-    // Create order
+    // Create the order in DB
     const order = await Order.create({
       items: formattedItems,
       shippingAddress,
@@ -53,10 +54,10 @@ exports.createOrder = async (req, res) => {
 
     await order.populate("items.product");
 
-    // Fire email
+    // Send email (SendGrid REST API)
     sendOrderEmail(shippingAddress.email, order)
       .then(() => console.log("Order email sent:", order._id))
-      .catch((err) => console.error("Email failed:", err));
+      .catch((err) => console.error("Email sending failed:", err));
 
     res.status(201).json(order);
   } catch (err) {

@@ -1,18 +1,7 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false, // TLS via 587
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-/**
- * Send order email using Nodemailer + SendGrid SMTP
- */
 async function sendOrderEmail(to, order) {
   const itemsHtml = order.items
     .map(
@@ -45,18 +34,16 @@ ${itemsHtml}
 </table>
 
 <h3>Total Amount: ₹${order.totalPrice}</h3>
-
-<p>We appreciate your purchase!</p>
 `;
 
-  const mailOptions = {
+  const msg = {
+    to,
     from: process.env.FROM_EMAIL,
-    to: "asiyasmuhammed18@gmail.com",
     subject: `Order Confirmation - ${order._id}`,
     html,
   };
 
-  return transporter.sendMail(mailOptions);
+  return sgMail.send(msg);
 }
 
 module.exports = { sendOrderEmail };
