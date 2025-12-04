@@ -1,6 +1,6 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
-const sendOrderEmail = require("../utils/sendMailer");
+const { sendOrderEmail } = require("../utils/emailService");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -19,16 +19,15 @@ exports.createOrder = async (req, res) => {
 
     const formattedItems = await Promise.all(
       items.map(async (i) => {
-        const productId = i.product;
-        const product = await Product.findById(productId);
+        const product = await Product.findById(i.product);
         if (!product) throw new Error("Product not found");
 
-        const price = product.price;
         const qty = Number(i.qty ?? i.quantity ?? 1);
+        const price = product.price;
         itemsPrice += price * qty;
 
         return {
-          product: productId,
+          product: product._id,
           qty,
           price,
           name: product.name,
@@ -54,14 +53,14 @@ exports.createOrder = async (req, res) => {
 
     await order.populate("items.product");
 
-    // Email sending (fire-and-forget but logged)
+    // Fire email
     sendOrderEmail(shippingAddress.email, order)
       .then(() => console.log("Order email sent:", order._id))
       .catch((err) => console.error("Email failed:", err));
 
     res.status(201).json(order);
   } catch (err) {
-    console.error("ORDER CREATE ERROR:", err);
+    console.error("ORDER ERROR:", err);
     res.status(500).json({ message: "Order creation failed" });
   }
 };
